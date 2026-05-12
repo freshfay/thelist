@@ -1,0 +1,701 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>The List 🦋</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --black: #0a0a0a;
+    --dark: #111111;
+    --card: #181818;
+    --card2: #1e1e1e;
+    --border: #2a2a2a;
+    --gold: #c9a84c;
+    --gold2: #f0d080;
+    --cream: #f5f0e8;
+    --muted: #666;
+    --red: #c0392b;
+    --green: #27ae60;
+    --blue: #2980b9;
+    --text: #e8e2d8;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  body {
+    background: var(--black);
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+    font-size: 14px;
+  }
+
+  /* ---- SPLASH SCREEN ---- */
+  #splash {
+    position: fixed; inset: 0;
+    background: var(--black);
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    z-index: 999;
+    transition: opacity 0.6s ease;
+  }
+  #splash .figure-wrap {
+    width: 200px; height: 280px;
+    position: relative; cursor: pointer;
+  }
+  #splash .figure-wrap img {
+    width: 100%; height: 100%; object-fit: contain;
+    filter: drop-shadow(0 0 40px rgba(201,168,76,0.3));
+    animation: float 3s ease-in-out infinite;
+  }
+  @keyframes float {
+    0%,100% { transform: translateY(0); }
+    50% { transform: translateY(-12px); }
+  }
+  #splash h1 {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 2.8rem; font-weight: 300;
+    letter-spacing: 0.1em;
+    color: var(--gold);
+    margin-top: 20px;
+  }
+  #splash p {
+    color: var(--muted); font-size: 12px;
+    letter-spacing: 0.2em; text-transform: uppercase;
+    margin-top: 8px;
+  }
+  #splash .enter-btn {
+    margin-top: 32px;
+    background: transparent;
+    border: 1px solid var(--gold);
+    color: var(--gold);
+    padding: 12px 40px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 12px; letter-spacing: 0.3em; text-transform: uppercase;
+    cursor: pointer; border-radius: 2px;
+    transition: all 0.3s;
+  }
+  #splash .enter-btn:hover { background: var(--gold); color: var(--black); }
+
+  /* ---- MAIN APP ---- */
+  #app { display: none; min-height: 100vh; }
+
+  /* Header */
+  .header {
+    background: var(--dark);
+    border-bottom: 1px solid var(--border);
+    padding: 16px 20px;
+    position: sticky; top: 0; z-index: 10;
+    display: flex; align-items: center; gap: 12px;
+  }
+  .header-avatar {
+    width: 36px; height: 48px; flex-shrink: 0;
+  }
+  .header-avatar img { width: 100%; height: 100%; object-fit: contain; }
+  .header-title {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1.4rem; font-weight: 300;
+    color: var(--gold); letter-spacing: 0.05em;
+  }
+  .header-count {
+    margin-left: auto;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 4px 12px;
+    font-size: 11px; color: var(--muted);
+  }
+  .header-count span { color: var(--gold); font-weight: 500; }
+
+  /* Tabs */
+  .tabs {
+    display: flex;
+    background: var(--dark);
+    border-bottom: 1px solid var(--border);
+    padding: 0 20px;
+  }
+  .tab-btn {
+    background: none; border: none;
+    color: var(--muted);
+    padding: 12px 16px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 12px; letter-spacing: 0.15em;
+    text-transform: uppercase; cursor: pointer;
+    border-bottom: 2px solid transparent;
+    transition: all 0.2s;
+  }
+  .tab-btn.active { color: var(--gold); border-bottom-color: var(--gold); }
+
+  /* Filter bar */
+  .filter-bar {
+    padding: 12px 20px;
+    display: flex; gap: 8px; flex-wrap: wrap;
+    background: var(--dark);
+    border-bottom: 1px solid var(--border);
+  }
+  .filter-chip {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 4px 14px; font-size: 11px;
+    cursor: pointer; transition: all 0.2s;
+    color: var(--muted);
+    letter-spacing: 0.1em;
+  }
+  .filter-chip.active { background: var(--gold); border-color: var(--gold); color: var(--black); }
+
+  /* Content */
+  .content { padding: 16px 20px 100px; }
+
+  /* Person Card */
+  .person-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    margin-bottom: 12px;
+    overflow: hidden;
+    transition: transform 0.2s;
+    cursor: pointer;
+  }
+  .person-card:active { transform: scale(0.99); }
+  .card-main {
+    padding: 14px 16px;
+    display: flex; align-items: center; gap: 12px;
+  }
+  .avatar-circle {
+    width: 42px; height: 42px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1rem; font-weight: 600;
+    flex-shrink: 0;
+    border: 1px solid var(--border);
+  }
+  .card-info { flex: 1; min-width: 0; }
+  .card-name {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1.05rem; font-weight: 400;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .card-meta { font-size: 11px; color: var(--muted); margin-top: 2px; }
+  .status-dot {
+    width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0;
+  }
+  .status-hablando { background: var(--green); box-shadow: 0 0 6px var(--green); }
+  .status-pausa { background: var(--muted); }
+  .status-volvimos { background: var(--gold); box-shadow: 0 0 6px var(--gold); }
+
+  .card-expanded {
+    border-top: 1px solid var(--border);
+    padding: 12px 16px;
+    display: none;
+  }
+  .card-expanded.show { display: block; }
+  .info-row {
+    display: flex; justify-content: space-between;
+    padding: 5px 0;
+    font-size: 12px;
+    border-bottom: 1px solid var(--border);
+  }
+  .info-row:last-child { border-bottom: none; }
+  .info-label { color: var(--muted); }
+  .info-val { color: var(--text); text-align: right; max-width: 60%; }
+  .obs-text {
+    font-size: 12px; color: var(--muted);
+    font-style: italic;
+    margin-top: 10px;
+    padding-top: 10px;
+    border-top: 1px solid var(--border);
+    line-height: 1.5;
+  }
+  .card-actions {
+    display: flex; gap: 8px; margin-top: 12px;
+  }
+  .card-actions button {
+    flex: 1; padding: 8px 4px;
+    background: var(--card2); border: 1px solid var(--border);
+    color: var(--text); border-radius: 4px;
+    font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase;
+    cursor: pointer; transition: all 0.2s;
+    font-family: 'DM Sans', sans-serif;
+  }
+  .card-actions .del-btn { color: var(--red); }
+  .card-actions button:hover { border-color: var(--gold); color: var(--gold); }
+
+  /* Status badge */
+  .status-badge {
+    font-size: 10px; letter-spacing: 0.1em;
+    text-transform: uppercase; padding: 3px 10px;
+    border-radius: 20px; display: inline-block;
+    margin-top: 6px;
+  }
+  .badge-hablando { background: rgba(39,174,96,0.15); color: var(--green); border: 1px solid rgba(39,174,96,0.3); }
+  .badge-pausa { background: rgba(102,102,102,0.15); color: var(--muted); border: 1px solid rgba(102,102,102,0.3); }
+  .badge-volvimos { background: rgba(201,168,76,0.15); color: var(--gold); border: 1px solid rgba(201,168,76,0.3); }
+
+  /* FAB */
+  .fab {
+    position: fixed; bottom: 28px; right: 24px;
+    width: 56px; height: 56px; border-radius: 50%;
+    background: var(--gold);
+    border: none; cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 24px;
+    box-shadow: 0 4px 20px rgba(201,168,76,0.4);
+    transition: transform 0.2s, box-shadow 0.2s;
+    z-index: 20;
+  }
+  .fab:active { transform: scale(0.94); }
+
+  /* MODAL */
+  .modal-overlay {
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,0.85);
+    z-index: 100;
+    display: none;
+    align-items: flex-end;
+  }
+  .modal-overlay.show { display: flex; }
+  .modal-box {
+    width: 100%;
+    background: var(--dark);
+    border-top: 1px solid var(--border);
+    border-radius: 16px 16px 0 0;
+    padding: 24px 20px 40px;
+    max-height: 90vh;
+    overflow-y: auto;
+    animation: slideUp 0.3s ease;
+  }
+  @keyframes slideUp {
+    from { transform: translateY(100%); }
+    to { transform: translateY(0); }
+  }
+  .modal-handle {
+    width: 40px; height: 4px;
+    background: var(--border); border-radius: 2px;
+    margin: 0 auto 20px;
+  }
+  .modal-title {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1.4rem; color: var(--gold);
+    margin-bottom: 20px; font-weight: 300;
+  }
+  .form-group { margin-bottom: 16px; }
+  .form-label {
+    display: block; font-size: 10px;
+    letter-spacing: 0.2em; text-transform: uppercase;
+    color: var(--muted); margin-bottom: 6px;
+  }
+  .form-input, .form-select, .form-textarea {
+    width: 100%; background: var(--card);
+    border: 1px solid var(--border); border-radius: 6px;
+    color: var(--text); padding: 10px 14px;
+    font-family: 'DM Sans', sans-serif; font-size: 14px;
+    outline: none; transition: border-color 0.2s;
+    appearance: none;
+  }
+  .form-input:focus, .form-select:focus, .form-textarea:focus {
+    border-color: var(--gold);
+  }
+  .form-select { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='%23666'%3E%3Cpath d='M7 10l5 5 5-5z'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 14px center; padding-right: 36px; }
+  .form-textarea { min-height: 80px; resize: vertical; line-height: 1.5; }
+  .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .submit-btn {
+    width: 100%; padding: 14px;
+    background: var(--gold);
+    color: var(--black); border: none;
+    border-radius: 6px; font-family: 'DM Sans', sans-serif;
+    font-size: 12px; font-weight: 500;
+    letter-spacing: 0.2em; text-transform: uppercase;
+    cursor: pointer; transition: all 0.2s; margin-top: 8px;
+  }
+  .submit-btn:active { opacity: 0.8; transform: scale(0.99); }
+  .cancel-btn {
+    width: 100%; padding: 12px;
+    background: transparent;
+    color: var(--muted); border: 1px solid var(--border);
+    border-radius: 6px; font-family: 'DM Sans', sans-serif;
+    font-size: 12px; letter-spacing: 0.15em; text-transform: uppercase;
+    cursor: pointer; margin-top: 10px;
+  }
+
+  /* Empty state */
+  .empty-state {
+    text-align: center; padding: 60px 20px;
+    color: var(--muted);
+  }
+  .empty-state .em-fig { width: 100px; margin: 0 auto 20px; opacity: 0.4; }
+  .empty-state .em-fig img { width: 100%; }
+  .empty-state h3 { font-family: 'Cormorant Garamond', serif; font-size: 1.3rem; color: var(--text); margin-bottom: 8px; }
+  .empty-state p { font-size: 12px; line-height: 1.6; }
+
+  /* Stats */
+  .stats-bar {
+    display: grid; grid-template-columns: repeat(3, 1fr);
+    gap: 1px; background: var(--border);
+    margin-bottom: 16px; border-radius: 8px; overflow: hidden;
+  }
+  .stat-item {
+    background: var(--card);
+    padding: 12px; text-align: center;
+  }
+  .stat-num {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1.4rem; color: var(--gold);
+  }
+  .stat-lbl { font-size: 10px; color: var(--muted); letter-spacing: 0.1em; text-transform: uppercase; margin-top: 2px; }
+
+  /* IG link */
+  .ig-link { color: var(--blue); font-size: 12px; }
+
+  /* Limit warning */
+  .limit-warn {
+    text-align: center; padding: 12px;
+    background: rgba(192,57,43,0.1);
+    border: 1px solid rgba(192,57,43,0.3);
+    border-radius: 6px; color: var(--red);
+    font-size: 12px; margin-bottom: 12px;
+    display: none;
+  }
+
+  select option { background: var(--dark); }
+</style>
+</head>
+<body>
+
+<!-- SPLASH -->
+<div id="splash">
+  <div class="figure-wrap">
+    <img src="1778541087027_imagen.png" alt="baddie figure" id="splashImg" onerror="this.src=''; this.parentElement.innerHTML='🦋';">
+  </div>
+  <h1>The List</h1>
+  <p>keep track of your situationships</p>
+  <button class="enter-btn" onclick="enterApp()">Enter ✦</button>
+</div>
+
+<!-- MAIN APP -->
+<div id="app">
+
+  <div class="header">
+    <div class="header-avatar">
+      <img src="1778541087027_imagen.png" alt="" id="headerImg" onerror="this.style.display='none'">
+    </div>
+    <div class="header-title">The List 🦋</div>
+    <div class="header-count"><span id="headerCount">0</span> / 30</div>
+  </div>
+
+  <div class="tabs">
+    <button class="tab-btn active" onclick="switchTab('list', this)">Lista</button>
+    <button class="tab-btn" onclick="switchTab('stats', this)">Stats</button>
+  </div>
+
+  <!-- LIST TAB -->
+  <div id="tab-list">
+    <div class="filter-bar">
+      <div class="filter-chip active" onclick="setFilter('all', this)">Todos</div>
+      <div class="filter-chip" onclick="setFilter('hablando', this)">Hablando</div>
+      <div class="filter-chip" onclick="setFilter('pausa', this)">Pausa</div>
+      <div class="filter-chip" onclick="setFilter('volvimos', this)">Volvimos</div>
+    </div>
+
+    <div class="content">
+      <div class="limit-warn" id="limitWarn">⚠ Límite de 30 personas alcanzado</div>
+      <div id="personList"></div>
+    </div>
+  </div>
+
+  <!-- STATS TAB -->
+  <div id="tab-stats" style="display:none; padding: 20px;">
+    <div class="stats-bar" id="statsBar"></div>
+    <div id="statsDetail"></div>
+  </div>
+
+  <!-- FAB -->
+  <button class="fab" onclick="openModal()" id="fabBtn">＋</button>
+</div>
+
+<!-- ADD/EDIT MODAL -->
+<div class="modal-overlay" id="addModal">
+  <div class="modal-box">
+    <div class="modal-handle"></div>
+    <div class="modal-title" id="modalTitle">Nueva Persona</div>
+
+    <input type="hidden" id="editId">
+
+    <div class="form-group">
+      <label class="form-label">Nombre *</label>
+      <input class="form-input" id="fNombre" placeholder="Nombre..." maxlength="40">
+    </div>
+
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Edad</label>
+        <input class="form-input" id="fEdad" placeholder="Edad" type="number" min="1" max="99">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Cómo se conocieron</label>
+        <input class="form-input" id="fComo" placeholder="Ej: App, trabajo...">
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">Instagram</label>
+      <input class="form-input" id="fIg" placeholder="@usuario">
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">Ocupación</label>
+      <input class="form-input" id="fOcupacion" placeholder="Ej: Estudiante, diseñador...">
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">Estado *</label>
+      <select class="form-select" id="fEstado">
+        <option value="hablando">💬 Hablando</option>
+        <option value="pausa">💤 Dejamos de hablar</option>
+        <option value="volvimos">🔥 Volvimos a hablar</option>
+      </select>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">Observaciones / Tea ☕</label>
+      <textarea class="form-textarea" id="fObs" placeholder="Cuéntame el chisme..."></textarea>
+    </div>
+
+    <button class="submit-btn" onclick="savePerson()">Guardar</button>
+    <button class="cancel-btn" onclick="closeModal()">Cancelar</button>
+  </div>
+</div>
+
+<script>
+const STORAGE_KEY = 'theList_v2';
+let people = [];
+let currentFilter = 'all';
+let editingId = null;
+
+const COLORS = [
+  { bg: '#2d1b1b', text: '#c9a84c' },
+  { bg: '#1b2d1e', text: '#27ae60' },
+  { bg: '#1b1e2d', text: '#2980b9' },
+  { bg: '#2d1b2a', text: '#9b59b6' },
+  { bg: '#2d261b', text: '#e67e22' },
+  { bg: '#1b2a2d', text: '#1abc9c' },
+];
+
+function getColor(id) {
+  const i = id % COLORS.length;
+  return COLORS[i];
+}
+
+function initials(name) {
+  return name.split(' ').map(w => w[0]).join('').toUpperCase().slice(0,2);
+}
+
+function load() {
+  try {
+    people = JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
+  } catch(e) { people = []; }
+}
+
+function save() {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(people));
+}
+
+function enterApp() {
+  document.getElementById('splash').style.opacity = '0';
+  setTimeout(() => {
+    document.getElementById('splash').style.display = 'none';
+    document.getElementById('app').style.display = 'block';
+  }, 600);
+  render();
+}
+
+function switchTab(tab, btn) {
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('tab-list').style.display = tab === 'list' ? 'block' : 'none';
+  document.getElementById('tab-stats').style.display = tab === 'stats' ? 'block' : 'none';
+  if (tab === 'stats') renderStats();
+}
+
+function setFilter(f, el) {
+  currentFilter = f;
+  document.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active'));
+  el.classList.add('active');
+  renderList();
+}
+
+function render() {
+  renderList();
+  document.getElementById('headerCount').textContent = people.length;
+  document.getElementById('limitWarn').style.display = people.length >= 30 ? 'block' : 'none';
+  document.getElementById('fabBtn').style.display = people.length >= 30 ? 'none' : 'flex';
+}
+
+function statusInfo(s) {
+  if (s === 'hablando') return { label: 'Hablando', cls: 'badge-hablando', dot: 'status-hablando' };
+  if (s === 'volvimos') return { label: 'Volvimos', cls: 'badge-volvimos', dot: 'status-volvimos' };
+  return { label: 'Pausa', cls: 'badge-pausa', dot: 'status-pausa' };
+}
+
+function renderList() {
+  const container = document.getElementById('personList');
+  let filtered = people;
+  if (currentFilter !== 'all') filtered = people.filter(p => p.estado === currentFilter);
+
+  if (filtered.length === 0) {
+    container.innerHTML = `
+      <div class="empty-state">
+        <div class="em-fig"><img src="1778541087027_imagen.png" onerror="this.style.display='none'"></div>
+        <h3>La lista está vacía</h3>
+        <p>${currentFilter === 'all' ? 'Agrega tu primera persona con el botón ＋' : 'Nadie en este estado por ahora.'}</p>
+      </div>`;
+    return;
+  }
+
+  container.innerHTML = filtered.map((p, idx) => {
+    const col = getColor(p.id);
+    const si = statusInfo(p.estado);
+    const ig = p.instagram ? `<a class="ig-link" href="https://instagram.com/${p.instagram.replace('@','')}" target="_blank">@${p.instagram.replace('@','')}</a>` : '—';
+    return `
+    <div class="person-card" onclick="toggleCard(${p.id})">
+      <div class="card-main">
+        <div class="avatar-circle" style="background:${col.bg};color:${col.text}">${initials(p.nombre)}</div>
+        <div class="card-info">
+          <div class="card-name">${p.nombre}</div>
+          <div class="card-meta">${p.edad ? p.edad + ' años · ' : ''}${p.ocupacion || ''}</div>
+          <div><span class="status-badge ${si.cls}">${si.label}</span></div>
+        </div>
+        <div class="status-dot ${si.dot}"></div>
+      </div>
+      <div class="card-expanded" id="exp-${p.id}">
+        <div class="info-row"><span class="info-label">Instagram</span><span class="info-val">${ig}</span></div>
+        ${p.como ? `<div class="info-row"><span class="info-label">Cómo se conocieron</span><span class="info-val">${p.como}</span></div>` : ''}
+        ${p.ocupacion ? `<div class="info-row"><span class="info-label">Ocupación</span><span class="info-val">${p.ocupacion}</span></div>` : ''}
+        ${p.obs ? `<div class="obs-text">☕ "${p.obs}"</div>` : ''}
+        <div class="card-actions">
+          <button onclick="event.stopPropagation(); editPerson(${p.id})">✏ Editar</button>
+          <button class="del-btn" onclick="event.stopPropagation(); deletePerson(${p.id})">✕ Eliminar</button>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function toggleCard(id) {
+  const exp = document.getElementById('exp-' + id);
+  if (!exp) return;
+  exp.classList.toggle('show');
+}
+
+function openModal(reset = true) {
+  if (reset) {
+    editingId = null;
+    document.getElementById('editId').value = '';
+    document.getElementById('modalTitle').textContent = 'Nueva Persona';
+    ['fNombre','fEdad','fIg','fOcupacion','fComo','fObs'].forEach(id => document.getElementById(id).value = '');
+    document.getElementById('fEstado').value = 'hablando';
+  }
+  document.getElementById('addModal').classList.add('show');
+}
+
+function closeModal() {
+  document.getElementById('addModal').classList.remove('show');
+}
+
+function editPerson(id) {
+  const p = people.find(x => x.id === id);
+  if (!p) return;
+  editingId = id;
+  document.getElementById('editId').value = id;
+  document.getElementById('modalTitle').textContent = 'Editar';
+  document.getElementById('fNombre').value = p.nombre || '';
+  document.getElementById('fEdad').value = p.edad || '';
+  document.getElementById('fIg').value = p.instagram || '';
+  document.getElementById('fOcupacion').value = p.ocupacion || '';
+  document.getElementById('fComo').value = p.como || '';
+  document.getElementById('fObs').value = p.obs || '';
+  document.getElementById('fEstado').value = p.estado || 'hablando';
+  openModal(false);
+}
+
+function savePerson() {
+  const nombre = document.getElementById('fNombre').value.trim();
+  if (!nombre) { document.getElementById('fNombre').focus(); return; }
+
+  const data = {
+    nombre,
+    edad: document.getElementById('fEdad').value,
+    instagram: document.getElementById('fIg').value.trim(),
+    ocupacion: document.getElementById('fOcupacion').value.trim(),
+    como: document.getElementById('fComo').value.trim(),
+    obs: document.getElementById('fObs').value.trim(),
+    estado: document.getElementById('fEstado').value,
+    updated: Date.now()
+  };
+
+  if (editingId !== null) {
+    const idx = people.findIndex(x => x.id === editingId);
+    if (idx !== -1) people[idx] = { ...people[idx], ...data };
+  } else {
+    if (people.length >= 30) return;
+    data.id = Date.now();
+    data.created = Date.now();
+    people.unshift(data);
+  }
+
+  save();
+  closeModal();
+  render();
+}
+
+function deletePerson(id) {
+  if (!confirm('¿Eliminar de la lista?')) return;
+  people = people.filter(p => p.id !== id);
+  save();
+  render();
+}
+
+function renderStats() {
+  const total = people.length;
+  const hablando = people.filter(p => p.estado === 'hablando').length;
+  const pausa = people.filter(p => p.estado === 'pausa').length;
+  const volvimos = people.filter(p => p.estado === 'volvimos').length;
+
+  document.getElementById('statsBar').innerHTML = `
+    <div class="stat-item"><div class="stat-num">${hablando}</div><div class="stat-lbl">Hablando</div></div>
+    <div class="stat-item"><div class="stat-num">${pausa}</div><div class="stat-lbl">Pausa</div></div>
+    <div class="stat-item"><div class="stat-num">${volvimos}</div><div class="stat-lbl">Volvimos</div></div>
+  `;
+
+  const sorted = [...people].sort((a,b) => (b.updated||0) - (a.updated||0));
+  document.getElementById('statsDetail').innerHTML = `
+    <div style="margin-bottom:12px; font-size:10px; letter-spacing:0.2em; text-transform:uppercase; color:var(--muted)">Actividad reciente</div>
+    ${sorted.slice(0,5).map(p => {
+      const si = statusInfo(p.estado);
+      const col = getColor(p.id);
+      return `<div style="display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--border)">
+        <div class="avatar-circle" style="background:${col.bg};color:${col.text};width:32px;height:32px;font-size:0.85rem">${initials(p.nombre)}</div>
+        <div style="flex:1"><div style="font-size:13px">${p.nombre}</div><div style="font-size:11px;color:var(--muted)">${p.como || 'Sin dato'}</div></div>
+        <span class="status-badge ${si.cls}">${si.label}</span>
+      </div>`;
+    }).join('')}
+    ${total === 0 ? '<div style="color:var(--muted);font-size:12px;text-align:center;padding:20px">Sin datos todavía</div>' : ''}
+    <div style="margin-top:20px;padding:16px;background:var(--card);border-radius:8px;text-align:center">
+      <div style="font-family:Cormorant Garamond,serif;font-size:2rem;color:var(--gold)">${total}</div>
+      <div style="font-size:11px;color:var(--muted);letter-spacing:0.15em;text-transform:uppercase">Total en la lista</div>
+      <div style="font-size:11px;color:var(--muted);margin-top:6px">${30 - total} espacios disponibles</div>
+    </div>
+  `;
+}
+
+// Close modal on overlay click
+document.getElementById('addModal').addEventListener('click', function(e) {
+  if (e.target === this) closeModal();
+});
+
+load();
+</script>
+</body>
+</html>
